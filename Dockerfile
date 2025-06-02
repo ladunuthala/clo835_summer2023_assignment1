@@ -1,5 +1,5 @@
 FROM ubuntu:20.04
-RUN apt-get update -y
+RUN apt-get update && apt install iputils-ping -y
 COPY . /app
 WORKDIR /app
 RUN set -xe \
@@ -11,3 +11,4 @@ RUN pip install -r requirements.txt
 EXPOSE 8080
 ENTRYPOINT [ "python3" ]
 CMD [ "app.py" ]
+#test
