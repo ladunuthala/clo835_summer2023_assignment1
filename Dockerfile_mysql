@@ -1,5 +1,7 @@
-FROM mysql:8.0
+FROM public.ecr.aws/docker/library/mysql:8.0
 
-COPY ./mysql.sql /tmp
+ENV MYSQL_DATABASE=employees
+ENV MYSQL_ROOT_PASSWORD=db_pass123
 
-CMD [ "mysqld", "--init-file=/tmp/mysql.sql" ]
+# initialize DB from this script at container start
+COPY mysql.sql /docker-entrypoint-initdb.d/mysql.sql
