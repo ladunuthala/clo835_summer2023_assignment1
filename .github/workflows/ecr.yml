@@ -1,0 +1,44 @@
+name: Build & Push to ECR
+
+on:
+  push:
+    branches: [ main ]   # your protected default branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # fine to keep even when using static creds
+
+    env:
+      AWS_REGION: us-east-1
+      WEB_REPO: clo835-webapp
+      MYSQL_REPO: clo835-mysql
+      IMAGE_TAG: v0.1
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token:     ${{ secrets.AWS_SESSION_TOKEN }}   # omit if not using temp creds
+          aws-region:            ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & push web image
+        run: |
+          docker build -t ${{ steps.login-ecr.outputs.registry }}/${{ env.WEB_REPO }}:${{ env.IMAGE_TAG }} -f Dockerfile .
+          docker push     ${{ steps.login-ecr.outputs.registry }}/${{ env.WEB_REPO }}:${{ env.IMAGE_TAG }}
+
+      - name: Build & push mysql image
+        run: |
+          docker build -t ${{ steps.login-ecr.outputs.registry }}/${{ env.MYSQL_REPO }}:${{ env.IMAGE_TAG }} -f Dockerfile_mysql .
+          docker push     ${{ steps.login-ecr.outputs.registry }}/${{ env.MYSQL_REPO }}:${{ env.IMAGE_TAG }}
